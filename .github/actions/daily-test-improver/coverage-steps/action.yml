@@ -1,0 +1,88 @@
+name: 'Coverage Steps for Daily Test Improver'
+description: 'Runs tests and generates coverage reports for containerd'
+runs:
+  using: 'composite'
+  steps:
+    - name: Install dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gperf dmsetup strace xfsprogs
+        script/setup/install-seccomp
+        script/setup/install-runc
+        script/setup/install-cni $(grep containernetworking/plugins go.mod | awk '{print $2}')
+        script/setup/install-critools
+        script/setup/install-dev-tools
+
+    - name: Install gotestsum for test output
+      shell: bash
+      run: script/setup/install-gotestsum
+      
+    - name: Build containerd binaries
+      shell: bash
+      env:
+        CGO_ENABLED: 1
+      run: |
+        make build
+        make binaries GO_BUILD_FLAGS="-mod=vendor"
+
+    - name: Run unit tests with coverage
+      shell: bash
+      env:
+        GOTESTSUM_JUNITFILE: ${{ github.workspace }}/test-unit-coverage-junit.xml
+        GOTESTSUM_JSONFILE: ${{ github.workspace }}/test-unit-coverage-gotest.json
+        GOTEST: gotestsum --
+      run: |
+        make coverage
+
+    - name: Run root tests with coverage
+      shell: bash
+      env:
+        GOTESTSUM_JUNITFILE: ${{ github.workspace }}/test-root-coverage-junit.xml
+        GOTESTSUM_JSONFILE: ${{ github.workspace }}/test-root-coverage-gotest.json
+        GOTEST: gotestsum --
+      run: |
+        sudo -E PATH=$PATH make root-coverage
+
+    - name: Generate coverage report
+      shell: bash
+      run: |
+        if [ -f coverage.txt ]; then
+          echo "Coverage file generated successfully"
+          # Create a readable coverage summary
+          go tool cover -func=coverage.txt > coverage-summary.txt
+          echo "Coverage summary generated"
+          
+          # Show overall coverage percentage
+          total_coverage=$(go tool cover -func=coverage.txt | tail -1 | awk '{print $3}')
+          echo "Total coverage: $total_coverage"
+          echo "TOTAL_COVERAGE=$total_coverage" >> $GITHUB_ENV
+        else
+          echo "Warning: coverage.txt not found"
+        fi
+
+    - name: Upload coverage report as artifact
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: |
+          coverage.txt
+          coverage-summary.txt
+          *-junit.xml
+          *-gotest.json
+        retention-days: 7
+
+    - name: Display coverage summary
+      shell: bash
+      run: |
+        if [ -f coverage-summary.txt ]; then
+          echo "## Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -20 coverage-summary.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "**Total Coverage: ${TOTAL_COVERAGE:-unknown}**" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "## Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ Coverage report not generated" >> $GITHUB_STEP_SUMMARY
+        fi
