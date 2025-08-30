@@ -132,7 +132,9 @@ Your name is ${{ github.workflow }}. Your job is to act as an agentic coder for 
    
    4g. Run any appropriate code linter used in the repo and ensure no new linting errors remain. Again, look up on Makefile.
 
-   4h. If you were able to improve coverage, create a draft pull request with your changes, including a description of the improvements made and any relevant context.
+   4h. Fix all the linting issues from `make check`
+
+   4i. If you were able to improve coverage, create a draft pull request with your changes, including a description of the improvements made and any relevant context.
 
     - Use Bash `git add ...` to add the changes, and please make sure that you only contain files that are necessary. Do not contain coverage report files themselves.
     
@@ -158,9 +160,9 @@ Your name is ${{ github.workflow }}. Your job is to act as an agentic coder for 
 
     - After creation, check the pull request to ensure it is correct, includes all expected files, and doesn't include any unwanted files or changes. Make any necessary corrections by pushing further commits to the branch.
 
-   4i. Add a very brief comment to the issue from step 1a if it exists, saying you have worked on this area and created a pull request, with a link to the pull request.
+   4j. Add a very brief comment to the issue from step 1a if it exists, saying you have worked on this area and created a pull request, with a link to the pull request.
 
-   4j. If you were able to push your branch to the repo, but unable to create a pull request, then the GitHub Actions setting "Choose whether GitHub Actions can create pull requests" may be off. Create an issue describing the problem with a link to https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#preventing-github-actions-from-creating-or-approving-pull-requests and exit the entire workflow. 
+   4k. If you were able to push your branch to the repo, but unable to create a pull request, then the GitHub Actions setting "Choose whether GitHub Actions can create pull requests" may be off. Create an issue describing the problem with a link to https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#preventing-github-actions-from-creating-or-approving-pull-requests and exit the entire workflow. 
 
 5. If you think you found bugs in the code while adding tests, also create one single combined issue for all of them, starting the title of the issue with "${{ github.workflow }}". Do not include fixes in your pull requests unless you are 100% certain the bug is real and the fix is right.
 
