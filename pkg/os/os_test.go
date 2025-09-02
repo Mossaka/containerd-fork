@@ -271,8 +271,19 @@ func TestRealOS_ResolveSymbolicLink(t *testing.T) {
 	if err != nil {
 		t.Errorf("ResolveSymbolicLink failed for symlink: %v", err)
 	}
-	if resolved != targetFile {
-		t.Errorf("Expected %s, got %s", targetFile, resolved)
+	
+	// Resolve both paths to handle symlinks in the base directory (like /tmp -> /private/tmp on macOS)
+	expectedResolved, err := filepath.EvalSymlinks(targetFile)
+	if err != nil {
+		t.Fatalf("Failed to resolve expected path: %v", err)
+	}
+	actualResolved, err := filepath.EvalSymlinks(resolved)
+	if err != nil {
+		t.Fatalf("Failed to resolve actual path: %v", err)
+	}
+	
+	if actualResolved != expectedResolved {
+		t.Errorf("Expected %s, got %s", expectedResolved, actualResolved)
 	}
 
 	// Test with non-existent file
